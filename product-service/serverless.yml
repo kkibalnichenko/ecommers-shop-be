@@ -15,11 +15,20 @@ service: product-service
 
 frameworkVersion: '3'
 
+useDotenv: true
+
 provider:
   name: aws
   runtime: nodejs12.x
   stage: dev
-  region: eu-west-1
+  region: ${env:REGION}
+  apiGateway:
+    minimumCompressionSize: 1024
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:*
+      Resource: '*'
 
 functions:
   getProductsList:
@@ -34,3 +43,9 @@ functions:
       - http:
           path: 'products/{id}'
           method: get
+  createProduct:
+    handler: handler.createProduct
+    events:
+      - http:
+          path: products
+          method: post

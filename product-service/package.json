@@ -1,0 +1,11 @@
+{
+  "name": "product-service",
+  "version": "1.0.0",
+  "devDependencies": {
+    "aws-sdk": "^2.1233.0"
+  },
+  "dependencies": {
+    "dotenv": "^16.0.3",
+    "uuid": "^9.0.0"
+  }
+}
