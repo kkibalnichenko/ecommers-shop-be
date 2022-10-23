@@ -1,14 +1,18 @@
 const AWS = require('aws-sdk');
-AWS.config.update({ region: "eu-west-1" });
 const docClient = new AWS.DynamoDB.DocumentClient();
-// const dynamodb = new AWS.DynamoDB();
 
 const { DYNAMODB_PRODUCTS_TABLE, DYNAMODB_STOCKS_TABLE } = process.env;
+
+const headers = {
+    "Access-Control-Allow-Origin": "*",
+    'Access-Control-Allow-Credentials': true,
+};
 
 const getItems = async (tableName) => {
     const params = { TableName: tableName };
     try {
-        return await docClient.scan(params).promise();
+        const response = await docClient.scan(params).promise();
+        return response.Items;
     } catch (err) {
         return err
     }
@@ -19,7 +23,7 @@ const getItemById = async (id) => {
         TransactItems: [
             {
                 Get: {
-                    TableName: 'Products',
+                    TableName: DYNAMODB_PRODUCTS_TABLE,
                     Key: {
                         id: id
                     }
@@ -27,7 +31,7 @@ const getItemById = async (id) => {
             },
             {
                 Get: {
-                    TableName: 'Stocks',
+                    TableName: DYNAMODB_STOCKS_TABLE,
                     Key: {
                         product_id: id
                     }
@@ -37,73 +41,35 @@ const getItemById = async (id) => {
     };
 
     try {
-        return await docClient.transactGet(params).promise();
+        const response = await docClient.transactGet(params).promise();
+        return response.Responses;
     } catch (err) {
         return err
     }
 }
 
 const create = async (id, body) => {
-    console.log('body', body);
-    console.log('id', id);
-    // const params = {
-    //     TransactItems: [
-    //         {
-    //             Put: {
-    //                 TableName: 'Products',
-    //                 Item: {
-    //                     'description': { 'S': body.description },
-    //                     'price': { 'N': body.price },
-    //                     'title': { 'S': body.title },
-    //                     'id': { 'S': id }
-    //                 },
-    //                 // ConditionExpression: 'attribute_not_exists(Id)'
-    //             }
-    //         },
-    //         {
-    //             Put: {
-    //                 TableName: 'Stocks',
-    //                 Item: {
-    //                     'count': { 'N': body.count },
-    //                     'product_id': { 'S': id }
-    //                 },
-    //                 // ConditionExpression: 'attribute_not_exists(Product_id)'
-    //             }
-    //         }
-    //     ]
-    // };
+    const { description, price, title, count } = body;
     const params = {
         RequestItems: {
-            'Products': [
+            [DYNAMODB_PRODUCTS_TABLE]: [
                 {
                     PutRequest: {
                         Item: {
-                            "description": {
-                                "S": body.description
-                            },
-                            "id": {
-                                "S": id
-                            },
-                            "price": {
-                                "N": body.price
-                            },
-                            "title": {
-                                "S": body.title
-                            }
+                            "description": description,
+                            "id": id,
+                            "price": price,
+                            "title": title
                         }
                     },
                 }
             ],
-            'Stocks': [
+            [DYNAMODB_STOCKS_TABLE]: [
                 {
                     PutRequest: {
                         Item: {
-                            "product_id": {
-                                "S": id
-                            },
-                            "count": {
-                                "N": `${body.count}`
-                            }
+                            "product_id": id,
+                            "count": count
                         }
                     },
                 }
@@ -118,4 +84,4 @@ const create = async (id, body) => {
     }
 }
 
-module.exports = { getItems, getItemById, create };
+module.exports = { getItems, getItemById, create, headers };

@@ -22,6 +22,9 @@ provider:
   runtime: nodejs12.x
   stage: dev
   region: ${env:REGION}
+  environment:
+    DYNAMODB_PRODUCTS_TABLE: ${env:DYNAMODB_PRODUCTS_TABLE}
+    DYNAMODB_STOCKS_TABLE: ${env:DYNAMODB_STOCKS_TABLE}
   apiGateway:
     minimumCompressionSize: 1024
   iamRoleStatements:

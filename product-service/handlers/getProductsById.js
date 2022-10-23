@@ -1,30 +1,25 @@
 'use strict';
-const { getItemById } = require('../services/dbService');
-
-const headers = {
-    'Access-Control-Allow-Origin': "*",
-    'Access-Control-Allow-Credentials': true,
-};
+const { getItemById, headers } = require('../services/dbService');
 
 const getProductsById = async (event) => {
+    const id = event['pathParameters'].id;
     try {
-        const id = event.pathParameters.id;
         const product = await getItemById(id);
-        if (!product.Responses[0].Item) {
+        if (!product[0].Item) {
             return {
-                statusCode: 500,
-                body: JSON.stringify('Error: Produst has not been found at DB'),
+                statusCode: 400,
+                body: JSON.stringify('Error: Product has not been found at DB'),
                 headers,
             };
         }
         console.log(`Success: Response of transactGet operation to DynamoDB (finding product by Id) ${JSON.stringify(product)}`);
 
-        const productWithUpdatedFormat = !!product.Responses[1].Item ?
-            {...product.Responses[0].Item, ...product.Responses[1].Item} : {...product.Responses[0].Item, count: 0};
+        const productWithUpdatedFormat = !!product[1].Item ?
+            {...product[0].Item, ...product[1].Item} : {...product[0].Item, count: 0};
 
         return {
             statusCode: 200,
-            body: JSON.stringify(productWithUpdatedFormat, null, 2),
+            body: JSON.stringify(productWithUpdatedFormat),
             headers,
         };
     } catch (err) {
